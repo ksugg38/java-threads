@@ -1,7 +1,6 @@
 //
 // Counting.java
 //
-// testtt
 public class Counting {
 
   static int idCnt=1;

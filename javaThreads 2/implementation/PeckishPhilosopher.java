@@ -1,24 +1,32 @@
 package implementation;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.Semaphore;
+import java.util.Random;
 
-public class PeckishPhilosopher {
-    public static void main(String[] args) throws InterruptedException {
-        final AtomicInteger counter = new AtomicInteger(0);
+public class PeckishPhilosopher implements Runnable{
 
-        class Philosopher {
-            String id;
-            int order;
-            boolean isEating;
-            boolean isThinking;
+    int order;
+    boolean isEating;
+    boolean isThinking;
+    private static final Semaphore semaphore = new Semaphore(2);
+    private static final int numPhilos = 5;
+
+    private static int firstEatingPhilo = 0;
+    private static int secondEatingPhilo = 2;
+
+    private static int rounds;
+
+    private final int philosopherId;
 
 
-            public Philosopher(String id) {
-                this.id = id;
-                this.order = counter.getAndIncrement();
+            public PeckishPhilosopher(int id) {
+                // id to distinguish philos from each other
+                this.philosopherId = id;
+                //this.order = counter.getAndIncrement()
             }
 
             public boolean change(Philosopher next){
+
                 synchronized (this) {
                     synchronized (next){
                         if (this.order < next.order) {
@@ -35,7 +43,37 @@ public class PeckishPhilosopher {
             }
             public synchronized boolean getIsEating() { return isEating; }
             public synchronized boolean getIsThinking() { return isThinking; }
-        }
+
+
+            public void run(){
+                try{
+                    for(int i =0; i< rounds; i++){
+                        synchronized (PeckishPhilosopher.class){
+                            //philos eat if they are selected
+                            if(canEat(philosopherId)){
+                                //checks that you are one of the 2 assigned philos that can eat
+                                //secondary check w semaphore (there are 2)
+                                semaphore.acquire();
+                                eat(i+1);//eating for randomized
+                                semaphore.release();
+                            }
+                        }
+                        think(i+1);
+                    }
+                } catch (InterruptedException e){
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+
+            private void eat(int round) throws InterruptedException{
+                int eatingTime = random.nextInt(3000) + 1000;
+                System.out.println("Round " +  round + ": Philosopher "+ philosopherId + "is eating for " + eatingTime );
+                Thread.sleep(eatingTime);
+            }
+
+
+
 
         final Philosopher phil1 =  new Philosopher("A");
         phil1.isEating = true;
@@ -87,5 +125,5 @@ public class PeckishPhilosopher {
 
 
 
-    }
+
 }
